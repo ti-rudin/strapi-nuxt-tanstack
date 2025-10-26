@@ -1,0 +1,40 @@
+{
+  "name": "strapi-nuxt-tanstack",
+  "version": "1.0.0",
+  "description": "Full-stack template with Strapi 5, Nuxt 3, and TanStack Vue Query",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/strapi-nuxt-tanstack.git"
+  },
+  "keywords": [
+    "strapi",
+    "nuxt",
+    "vue",
+    "vue-query",
+    "tanstack",
+    "typescript",
+    "tailwindcss",
+    "pm2",
+    "template",
+    "fullstack"
+  ],
+  "author": "Alexander Rudin",
+  "license": "MIT",
+  "main": "ecosystem.config.js",
+  "scripts": {
+    "start": "pm2 start ecosystem.config.js",
+    "stop": "pm2 stop ecosystem.config.js",
+    "restart": "pm2 restart ecosystem.config.js",
+    "delete": "pm2 delete ecosystem.config.js",
+    "logs": "pm2 logs",
+    "status": "pm2 status",
+    "dev": "pm2 start ecosystem.dev.config.js",
+    "dev:stop": "pm2 stop ecosystem.dev.config.js",
+    "dev:delete": "pm2 delete ecosystem.dev.config.js"
+  },
+
+  "devDependencies": {
+    "dotenv": "^17.2.3"
+  }
+}
+

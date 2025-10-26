@@ -1,10 +1,10 @@
-# Nuxt Minimal Starter
+# Nuxt + Strapi Blog Application
 
-Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.
+Blog application with email authentication integrated with Strapi CMS.
 
 ## Setup
 
-Make sure to install dependencies:
+### 1. Install dependencies:
 
 ```bash
 # npm
@@ -19,6 +19,33 @@ yarn install
 # bun
 bun install
 ```
+
+### 2. Environment Variables
+
+Create a `.env` file in the root directory:
+
+```env
+NUXT_PUBLIC_STRAPI_URL=http://localhost:1337
+```
+
+Update this URL if your Strapi backend is running on a different port.
+
+### 3. Make sure Strapi backend is running
+
+The application requires a Strapi backend running on port 1337 (or the port specified in your `.env` file).
+
+## Features
+
+- ✅ Email-based registration and login
+- ✅ Protected user session management
+- ✅ Responsive article listing
+- ✅ Dark mode support
+
+## Authentication
+
+- **Login**: Navigate to `/login` or click the "Войти" button in the header
+- **Register**: Navigate to `/register` to create a new account
+- **Logout**: Click the "Выйти" button when logged in
 
 ## Development Server
 
