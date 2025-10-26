@@ -1,0 +1,186 @@
+# Правила работы с типами Strapi
+
+## Система типов
+
+Проект использует автоматическую генерацию типов из Strapi. Все типы находятся в папке `shared-types/index.ts`.
+
+## Основные типы
+
+- `StrapiArticle` - для статей (articles)
+- `StrapiMediaData` - для медиа файлов (изображения, видео и т.д.)
+- `StrapiArticleAttributes` - атрибуты статьи
+- `StrapiCollectionData<T>` - для коллекций (множественные результаты)
+- `StrapiSingleData<T>` - для одиночных объектов
+
+## Правила использования
+
+### 1. Импорт типов
+
+Всегда импортируйте типы из `~/shared-types`:
+
+```typescript
+import type { StrapiArticle, StrapiCollectionData } from '~/shared-types';
+```
+
+### 2. Использование в компонентах
+
+При работе с данными от модуля @nuxtjs/strapi используйте типы для улучшения IntelliSense:
+
+```typescript
+const { data: articles } = await useAsyncData('articles', () =>
+  find('articles', { populate: '*' })
+) as { data: StrapiCollectionData<StrapiArticle> | null; error: any };
+```
+
+### 3. Добавление новых типов
+
+**ВАЖНО**: Типы генерируются автоматически через скрипт `npm run synctypes`. 
+
+Для добавления нового типа:
+1. Добавьте определение в файл `scripts/synctypes.js` в функцию `generateTypes()`
+2. Запустите `npm run synctypes` для генерации типов
+3. НЕ редактируйте файл `shared-types/index.ts` вручную - он перезапишется при следующем запуске скрипта
+
+Пример добавления нового типа:
+
+```javascript
+// В scripts/synctypes.js в функции generateTypes():
+export interface StrapiNewContentType {
+  id: number;
+  attributes: {
+    title: string;
+    description: string;
+    createdAt: string;
+    updatedAt: string;
+    [key: string]: any;
+  };
+}
+
+// И так далее...
+```
+
+### 4. Структура типов
+
+Все типы должны следовать структуре Strapi v4/v5 API:
+
+- Каждый content type имеет интерфейс `Strapi{TypeName}` с полями `id` и `attributes`
+- Атрибуты имеют интерфейс `Strapi{TypeName}Attributes`
+- Медиа файлы используют `StrapiMediaData`
+- Коллекции используют `StrapiCollectionData<T>`
+- Одиночные объекты используют `StrapiSingleData<T>`
+
+### 5. Работа с неопределенными данными
+
+Если структура данных от Strapi не соответствует типу, используйте помощники:
+
+```typescript
+const getArticleAttr = (article: any, attr: string) => {
+  if (!article) return '';
+  return article[attr] || article.attributes?.[attr] || '';
+};
+
+// Использование:
+{{ getArticleAttr(article, 'title') }}
+```
+
+### 6. Синхронизация типов
+
+Запускайте `npm run synctypes` когда:
+- Добавлен новый content type в Strapi
+- Изменена структура существующего content type
+- Нужно обновить типы после изменения схемы в Strapi
+
+### 7. DO NOT
+
+- ❌ Не редактируйте `shared-types/index.ts` напрямую
+- ❌ Не используйте `any` для типов Strapi (используйте готовые типы)
+- ❌ Не хардкодьте типы в каждом файле (используйте shared-types)
+- ❌ Не игнорируйте ошибки типов - исправляйте их через систему типов
+
+### 8. Обновление существующих типов
+
+Если нужно обновить существующий тип:
+1. Откройте `scripts/synctypes.js`
+2. Найдите соответствующий интерфейс
+3. Измените его структуру
+4. Запустите `npm run synctypes`
+5. Проверьте, что изменения применены в `shared-types/index.ts`
+
+### 9. Использование в composables
+
+В composables импортируйте и используйте типы для улучшения автодополнения:
+
+```typescript
+import type { StrapiArticle } from '~/shared-types';
+
+export const useArticles = () => {
+  // ... логика с типами
+};
+```
+
+### 10. Работа с Vue Query (TanStack Query)
+
+**ВАЖНО**: Проект использует Vue Query для продвинутого кэширования и управления состоянием.
+
+#### Создание query composable
+
+Все запросы к Strapi создаются через composables с использованием `useQuery`:
+
+```typescript
+// composables/useArticlesQuery.ts
+export const useArticlesQuery = () => {
+  const { find } = useStrapi();
+  
+  return useQuery({
+    queryKey: ['articles'],
+    queryFn: async () => {
+      const response = await find('articles', { populate: '*' });
+      return response;
+    },
+    staleTime: 1000 * 60 * 5, // 5 минут
+    gcTime: 1000 * 60 * 30, // 30 минут
+    refetchOnWindowFocus: true,
+  });
+};
+```
+
+#### Использование в компонентах
+
+```typescript
+const { data, isLoading, isError, error, refetch } = useArticlesQuery();
+
+// Состояния:
+// - isLoading: загрузка данных
+// - isError: произошла ошибка
+// - error: объект ошибки
+// - data: данные ответа
+// - refetch: функция для повторного запроса
+```
+
+#### Правила работы с Vue Query
+
+1. **НЕ используйте `useAsyncData` вместе с Vue Query** - это избыточно
+2. **Всегда используйте состояния Vue Query** - `isLoading`, `isError` для UI
+3. **Кэш управляется автоматически** - данные обновляются в фоне
+4. **Инвалидация через key** - для принудительного обновления используйте `invalidateQueries`
+
+#### Пример мутаций (для будущего)
+
+```typescript
+export const useCreateArticle = () => {
+  const { create } = useStrapi();
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async (articleData) => {
+      const response = await create('articles', articleData);
+      return response;
+    },
+    onSuccess: () => {
+      // Инвалидировать кэш после успешного создания
+      queryClient.invalidateQueries({ queryKey: ['articles'] });
+    },
+  });
+};
+```
+
