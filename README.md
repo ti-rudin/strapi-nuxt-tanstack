@@ -54,7 +54,7 @@
 1. Клонируйте репозиторий:
 
 ```bash
-git clone https://github.com/yourusername/strapi-nuxt-tanstack.git
+git clone https://github.com/ti-rudin/strapi-nuxt-tanstack.git
 cd strapi-nuxt-tanstack
 ```
 
